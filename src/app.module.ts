@@ -21,6 +21,7 @@ import { OrdersModule } from './orders/orders.module';
         database: config.get('DB_NAME', 'orders'),
         autoLoadEntities: true,
         synchronize: false,
+        logging: ['query'],
       }),
     }),
     ProductsModule,
