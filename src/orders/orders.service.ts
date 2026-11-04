@@ -4,16 +4,21 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Order, OrderStatus } from '@/database/entities/order.entity';
 import { OrderItem } from '@/database/entities/order-item.entity';
 import { Product } from '@/database/entities/product.entity';
 import { User } from '@/database/entities/user.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+    private readonly dataSource: DataSource,
+  ) {}
 
   async create(dto: CreateOrderDto): Promise<Order> {
     const ids = dto.items.map((i) => i.productId);
@@ -78,5 +83,28 @@ export class OrdersService {
 
       return manager.save(order);
     });
+  }
+
+  async findOne(id: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: { items: { product: true } },
+      select: {
+        id: true,
+        status: true,
+        totalCents: true,
+        createdAt: true,
+        items: {
+          id: true,
+          quantity: true,
+          unitPriceCents: true,
+          product: { id: true, name: true },
+        },
+      },
+    });
+
+    if (!order) throw new NotFoundException('Order not found!');
+
+    return order;
   }
 }
