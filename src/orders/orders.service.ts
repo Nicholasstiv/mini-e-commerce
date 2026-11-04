@@ -11,6 +11,7 @@ import { Product } from '@/database/entities/product.entity';
 import { User } from '@/database/entities/user.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ListOrdersQueryDto } from './dto/list-order-query.dto';
 
 @Injectable()
 export class OrdersService {
@@ -106,5 +107,21 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found!');
 
     return order;
+  }
+
+  async findByUser(userId: string, query: ListOrdersQueryDto) {
+    const { limit, offset } = query;
+
+    const [orders, total] = await this.orderRepository.findAndCount({
+      where: { userId },
+      order: { createdAt: 'DESC', id: 'DESC' },
+      take: limit,
+      skip: offset,
+    });
+
+    return {
+      data: orders,
+      meta: { total, limit, offset },
+    };
   }
 }
