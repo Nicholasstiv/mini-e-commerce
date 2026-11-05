@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -31,5 +32,10 @@ export class OrdersController {
     @Query() query: ListOrdersQueryDto,
   ) {
     return this.ordersService.findByUser(userId, query);
+  }
+
+  @Patch('orders/:id/cancel')
+  cancel(@Param('id', ParseUUIDPipe) id: string) {
+    return this.ordersService.cancel(id);
   }
 }

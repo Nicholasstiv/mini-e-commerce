@@ -124,4 +124,41 @@ export class OrdersService {
       meta: { total, limit, offset },
     };
   }
+
+  async cancel(id: string): Promise<Order> {
+    await this.dataSource.transaction(async (manager) => {
+      const result = await manager
+        .createQueryBuilder()
+        .update(Order)
+        .set({ status: OrderStatus.CANCELLED })
+        .where('id = :id AND status = :pending', {
+          id,
+          pending: OrderStatus.PENDING,
+        })
+        .execute();
+
+      if (result.affected === 0) {
+        const exists = await manager.existsBy(Order, { id });
+        if (!exists) throw new NotFoundException('Order not found!');
+        throw new ConflictException('Only pending orders can be cancelled');
+      }
+
+      const items = await manager.find(OrderItem, {
+        where: { orderId: id },
+        order: { productId: 'ASC' },
+      });
+
+      for (const item of items) {
+        await manager
+          .createQueryBuilder()
+          .update(Product)
+          .set({ stock: () => 'stock + :qty' })
+          .where('id = :id', { id: item.productId })
+          .setParameter('qty', item.quantity)
+          .execute();
+      }
+    });
+
+    return this.findOne(id);
+  }
 }
