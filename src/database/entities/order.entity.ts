@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -18,6 +19,7 @@ export enum OrderStatus {
 }
 
 @Entity()
+@Index(['userId', 'createdAt', 'id'])
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
