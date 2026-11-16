@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+.git
+.gitignore
+
+# segredos e configuração local nunca entram na imagem
+.env
+.env.*
+
+docs
+race.mjs
+*.md
+npm-debug.log*
+.DS_Store
